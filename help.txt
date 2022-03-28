@@ -1,0 +1,595 @@
+ListView.builder(
+      itemCount: _journals.length,
+            itemBuilder: (context, index) {
+              return Container(
+                child: Row(
+                    children: <Widget>[
+                      Container(margin: EdgeInsets.only(
+                        left: 5.0, right: 5.0,),),
+                      Container(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start,
+                          children: <Widget>[
+                            Text(
+                              _journals[index]['descrizione'],
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight
+                                      .bold),),
+                          ],
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                                width: 1.0,
+                                color: Colors.black),
+                          ),
+                        ),
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * 0.20,
+                      ),
+                      Container(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment
+                                .start,
+                            children: <Widget>[
+                              Text(
+                                _journals[index]['matricola'].toString(),
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight
+                                        .bold),),
+                            ]
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                                width: 1.0,
+                                color: Colors.black),
+                          ),
+                        ),
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * 0.20,
+                      ),
+                      Container(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment
+                                .end,
+                            children: <Widget>[
+                              IconButton(
+                                icon: const Icon(
+                                    Icons.list),
+                                onPressed: _showMultiSelect
+                              ),
+                            ]
+                        ),
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * 0.20,
+                      ),
+                      Container(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment
+                                .end,
+                            children: <Widget>[
+                              IconButton(
+                                icon: const Icon(
+                                    Icons.edit),
+                                onPressed: () => {
+                                _showForm(_journals[index]['Id'])
+                                },
+                              )
+
+                            ]
+                        ),
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * 0.10,
+                      ),
+                      Container(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment
+                                .end,
+                            children: <Widget>[
+                              IconButton(
+                                icon: const Icon(
+                                    Icons.delete),
+                                onPressed: () => {
+                                  _showMyDialog(index),
+                                },
+                              ),
+                            ]
+                        ),
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width * 0.10,
+
+                      ),
+                    ]
+                ),
+              );
+            }
+      )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                  Container(
+                                                child: Row(
+                                                  children: [
+                                                    TextField(
+                                                      keyboardType: TextInputType.number,
+                                                      controller: txtmatricola,
+                                                      decoration: InputDecoration(
+                                                        border: OutlineInputBorder(),
+                                                        hintText: 'MATRICOLA',
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Container(
+                                                width: MediaQuery
+                                                    .of(context)
+                                                    .size
+                                                    .width * 0.9,
+                                                child: TextButton(
+                                                  style: TextButton.styleFrom(
+                                                    textStyle: const TextStyle(fontSize: 20),
+                                                  ),
+                                                  onPressed: () {
+                                                    if(txtdescrizione.text !="" || txtmatricola.text != "" || txtdescrizione.text !="undefined" || txtmatricola.text != "undefined"){
+                                                      dbHelper.insert_collaboratori(txtdescrizione.text, txtmatricola.text, '16');
+                                                      txtdescrizione.text = "";
+                                                      txtmatricola.text = "";
+                                                    }
+                                                  },
+                                                  child: const Text('INVIA', style: TextStyle(color: Colors.white),),
+                                                ),
+                                                margin: EdgeInsets.only(top: 4.0),
+                                                decoration: BoxDecoration(color: Colors.blue),
+                                              ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import 'dart:convert';
+
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_hr_app/AcqGpsPages/AcqGpsLoading.dart';
+import 'package:flutter_hr_app/Model/Squadra.dart';
+import 'package:flutter_hr_app/TimbPages/timbratureListWinit.dart';
+import 'package:intl/intl.dart';
+
+import '../HomePages/homePageWinit.dart';
+import '../database.dart';
+import '../preferenze.dart';
+// Multi Select widget
+// This widget is reusable
+class MultiSelect extends StatefulWidget {
+  final List<String> items;
+  const MultiSelect({Key key, this.items}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _MultiSelectState();
+}
+
+class _MultiSelectState extends State<MultiSelect> {
+  // this variable holds the selected items
+  final List<String> _selectedItems = [];
+
+// This function is triggered when a checkbox is checked or unchecked
+  void _itemChange(String itemValue, bool isSelected) {
+    setState(() {
+      if (isSelected) {
+        _selectedItems.add(itemValue);
+      } else {
+        _selectedItems.remove(itemValue);
+      }
+    });
+  }
+
+  // this function is called when the Cancel button is pressed
+  void _cancel() {
+    Navigator.pop(context);
+  }
+
+// this function is called when the Submit button is tapped
+  void _submit() {
+    print(_selectedItems);
+    Navigator.pop(context, _selectedItems);
+  }
+  void _reset() {
+    _selectedItems.clear();
+    Navigator.pop(context);
+  }
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('SELECT JSON SQUADRA'),
+      content: SingleChildScrollView(
+        child: ListBody(
+          children: widget.items
+              .map((item) => CheckboxListTile(
+            value: _selectedItems.contains(item),
+            title: Text(item),
+            controlAffinity: ListTileControlAffinity.leading,
+            onChanged: (isChecked) => _itemChange(item, isChecked),
+          ))
+              .toList(),
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          child: const Text('INVIA'),
+          onPressed: _submit,
+        ),
+        ElevatedButton(
+          child: const Text('ANNULLA'),
+          onPressed: _cancel,
+        ),
+      ],
+    );
+  }
+}
+class CollaboratoriList extends StatefulWidget {
+  //final List<Map<String, dynamic>> items;
+  //const CollaboratoriList({Key key, this.items}) : super(key: key);
+  @override
+  State<StatefulWidget> createState() {
+    return CollaboratoriListState();
+  }
+}
+
+class CollaboratoriListState extends State<CollaboratoriList> {
+  final AudioCache _audioCache = AudioCache();
+  int vmode = 0;
+  String vname = "";
+  int authrowid = 0;
+  int uid = 0;
+  int cid = 0;
+  String _currentAddress;
+  final DateFormat dbformatter = DateFormat('yyyy-MM-dd HH:mm:ss');
+  final dbHelper = DatabaseHelper.instance;
+  Container loadEvent = new Container();
+  Container confirm = new Container();
+  TextEditingController txtdescrizione = TextEditingController();
+  TextEditingController txtmatricola = TextEditingController();
+  List<Map<String, dynamic>> _journals = [];
+  _refreshJournals() async {
+    final data = await dbHelper.collaboratore_select();
+    setState(() {
+      _journals = data;
+    });
+  }
+
+  @override
+  void initState() {
+    _refreshJournals();
+    super.initState();
+  }
+  void _showForm(int id) async {
+    if (id != null) {
+      final existingJournal = _journals.firstWhere((element) =>
+      element['Id'] == id);
+      txtdescrizione.text = existingJournal['descrizione'].toString();
+      txtmatricola.text = existingJournal['matricola'].toString();
+    }
+    showModalBottomSheet(
+        context: context,
+        elevation: 5,
+        isScrollControlled: true,
+        builder: (_) =>
+            Container(
+              padding: EdgeInsets.all(10),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                      child: Column(
+                        children: [
+                          Container(
+                              child: Column(
+                                  children: [
+                                    AppBar(
+                                      leading: IconButton(
+                                        icon: Icon(Icons.arrow_back, color: Colors.white),
+                                        onPressed: () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) => CollaboratoriList())),
+                                      ),
+                                      title: Text('AGGIORNA SQUADRA'),
+                                      backgroundColor: Colors.blue,
+                                    ),
+                                    Container(
+                                      width: MediaQuery
+                                          .of(context)
+                                          .size
+                                          .width * 0.9,
+                                      child: TextField(
+                                        keyboardType: TextInputType.text,
+                                        controller: txtdescrizione,
+                                        decoration: InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          hintText: 'DESCRIZIONE',
+                                        ),
+                                      ),
+                                      margin: EdgeInsets.only(bottom: 4.0),
+                                    ),
+                                    Container(
+                                      width: MediaQuery
+                                          .of(context)
+                                          .size
+                                          .width * 0.9,
+                                      child: TextField(
+                                        keyboardType: TextInputType.number,
+                                        controller: txtmatricola,
+                                        decoration: InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          hintText: 'MATRICOLA',
+                                        ),
+                                      ),
+                                      margin: EdgeInsets.only(top: 4.0),
+                                    ),
+                                    Container(
+                                      width: MediaQuery
+                                          .of(context)
+                                          .size
+                                          .width * 0.9,
+                                      child: TextButton(
+                                        style: TextButton.styleFrom(
+                                          textStyle: const TextStyle(fontSize: 20),
+                                        ),
+                                        onPressed: () async {
+                                          if (id == null) {
+                                            await _addItem();
+                                          }
+
+                                          if (id != null) {
+                                            await _updateItem(id);
+                                          }
+
+                                          // Clear the text fields
+                                          txtdescrizione.text = "";
+                                          txtmatricola.text = "";
+                                          // Close the bottom sheet
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: const Text('INVIA', style: TextStyle(color: Colors.white),),
+                                      ),
+                                      margin: EdgeInsets.only(top: 4.0),
+                                      decoration: BoxDecoration(color: Colors.blue),
+                                    ),
+                                  ]
+                              )
+                          )
+                        ],
+                      ),
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black12)
+                      ),
+                      margin: EdgeInsets.only(left: 15.0, right: 15.0, top:10.0, bottom: 10.0,),
+                    ),
+                  ],
+                ),
+              ),
+              width:MediaQuery.of(context).size.width * 1.0,
+              height:MediaQuery.of(context).size.height * 1.0,
+            )
+    );
+  }
+  Future<void> _addItem() async {
+    await dbHelper.insert_collaboratori(txtdescrizione.text, txtmatricola.text,'16');
+    _refreshJournals();
+  }
+  Future<void> _updateItem(int id) async {
+    await dbHelper.update_collaboratore(id, txtdescrizione.text, txtmatricola.text);
+    _refreshJournals();
+  }
+  void _deleteItem(int id) async {
+    await dbHelper.delete_collaboratore(id);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Successivamente cancellato dati !'),
+    ));
+    _refreshJournals();
+  }
+  Future<void> _showMyDialog(int index) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmazione'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                Text('Sei sicuro da cancellare dati?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Confirma'),
+              onPressed: () {
+                _deleteItem(_journals[index]['Id']);
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Annulla'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+  List<String> _selectedItems = [];
+
+  Future _showMultiSelect() async {
+    final List<String> _items = [];
+    for(int i=0;i<_journals.length;i++){
+      _items.add("'"+"{"+_journals[i]["Id"].toString()+","+'"'+_journals[i]["descrizione"]+'"'+","+_journals[i]["matricola"].toString()+","+_journals[i]["IdCliente"].toString()+"}"+"'");
+    }
+    final List results = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return MultiSelect(items: _items);
+      },
+    );
+
+    // Update UI
+    if (results != null) {
+      setState(() {
+        _selectedItems = results;
+      });
+    }
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Squadra'),
+      ),
+      body: Form(
+        child: Row(
+        children:[
+            SizedBox(
+              height: 30,
+              width:300,
+                child: Container(
+                  child: Column(
+                    children: [
+                      Container(
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.arrow_back, color: Colors.white),
+                              onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => HomePageWinit(true))),
+                            )
+                          ],
+                        ),
+                      ),
+                      Container(
+                        child: Row(
+                          children: [
+                            TextField(
+                              keyboardType: TextInputType.text,
+                              controller: txtdescrizione,
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(),
+                                hintText: 'DESCRIZIONE',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+            )
+
+        ],
+      ),
+    )
+    );
+  }
+  void dBSaveData(verso) {
+    audio();
+    getUser();
+    DateTime tin = DateTime.now();
+    Map<String, dynamic> timb = new Map<String, dynamic>();
+    timb["USER_ID"] = uid;
+    timb["DATETIME"] = dbformatter.format(tin);
+    timb["VERSO"] = "";
+    timb["LATITUDE"] = Preferenze.lat;
+    timb["LONGITUDE"] = Preferenze.long;
+    timb["IMPORTED"] = 0;
+
+    timb["TIPO_ACQUISIZIONE"] = vmode;
+    timb["TECNOLOGIA_ACQUISIZIONE"] = "GPS";
+    final DateFormat tsformatter = DateFormat('yyyy-MM-dd HH:mm:ss');
+    timb["VALORE_ACQUISIZIONE"] = jsonEncode([
+      {
+        "longitudine": timb["LONGITUDE"],
+        "latitudine": timb["LATITUDE"],
+        "datetime": tsformatter.format(tin),
+        "verso": "",
+        "motivazione": verso,
+        "squadra": _selectedItems,
+      }
+    ]);
+
+    print(timb["VALORE_ACQUISIZIONE"]);
+
+    try {
+      //non devo verificare la posizione
+      dbHelper.insert_TIMB(timb).then((val) => null);
+      onBackPressed(context);
+    } on Exception catch (_) {}
+  }
+  void audio() {
+    print("object");
+    _audioCache.play('audio/Ping.mp3');
+  }
+  getUser() {
+    dbHelper.queryAllRows_AUTH_USER().then((users) =>
+    {this.uid = users[0]["USER_ID"], this.cid = users[0]["CLIENTE_ID"]});
+  }
+}
+
+
+
+
+
+
+
+
+
+
